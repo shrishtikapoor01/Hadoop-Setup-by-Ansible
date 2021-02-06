@@ -1,0 +1,62 @@
+- hosts: namenode
+  tasks:
+  - copy:
+          src: "/root/jdk-8u171-linux-x64.rpm"
+          dest: "/root"
+
+  - copy:
+          src: "/root/hadoop-1.2.1-1.x86_64.rpm"
+          dest: "/root"
+
+  - yum:
+          name: "jdk-8u171-linux-x64.rpm"
+          state: present
+          disable_gpg_check: yes
+
+  - command: "rpm -i hadoop-1.2.1-1.x86_64.rpm --force"
+
+- hosts: namenode
+  tasks:
+  - file:
+          dest: /nn
+          state: directory
+
+  - template:
+          dest: /etc/hadoop/hdfs-site.xml
+          src: hdfs-site.xml
+
+  - template:
+          dest: /etc/hadoop/core-site.xml
+          src: core-site.xml
+
+  - command: "hadoop namenode -format -force"
+
+  - command: "hadoop-daemon.sh start namenode"
+
+  - firewalld:
+          port: "9001/tcp"
+          state: enabled
+          permanent: yes
+          immediate: yes
+
+- hosts: datanode
+  tasks:
+  - file: 
+          dest: /dn
+          state: directory
+
+  - template:
+          dest: hdfs-site.xml
+          src: /etc/hadoop/hdfs-site.xml
+
+  - template:
+          dest: core-site.xml
+          src: /etc/hadoop/core-site.xml
+
+  - command: "hadoop-daemon.sh start datanode"
+
+  - firewalld:
+          port: "9001/tcp"
+          state: enabled
+          permanent: yes
+          immediate: yes
